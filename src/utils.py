@@ -51,7 +51,7 @@ def cmap1(frac):
 	"r->b->g"
 	r = clamp(2*(0.5-frac), 0, 1)
 	g = clamp(2*(frac-0.5), 0, 1)
-	b = (1-(2*(frac-0.5))**2)
+	b = clamp(1-(3*(frac-0.5))**2, 0, 1)
 	return tuple([int(5*x) for x in (r,g,b)])
 
 def cmap2(frac):

@@ -127,14 +127,15 @@ def main(screen):
 	cmapH = len(cmaps) + 2
 	cmap = curses.newpad(cmapH,cmapW)
 	def build_cmap_win():
+		l = 1
 		for i in range(len(cmaps)):
 			k = i + 1
-			c1 = '<' if i==cmapI else ' '
-			c2 = '>' if i==cmapI else ' '
+			c1 = '>' if i==cmapI else '     '
+			c2 = '<' if i==cmapI else '     '
 			cmap.addstr(k, 1,       c1)
-			cmap.addstr(k, cmapW-2, c2)
-			for j in range(2, cmapW-2):
-				f = (j-2.)/(cmapW-4.)
+			cmap.addstr(k, cmapW-l-1, c2)
+			for j in range(l+1, cmapW-l-1):
+				f = (j-float(l))/(cmapW-2*float(l))
 				cmap.addstr(k,j,'=',curses.color_pair(tcol(*cmaps[i](f))))
 		cmap.border()
 	
@@ -163,9 +164,9 @@ def main(screen):
 		if changed:
 			lineW = len(str(csv.nrows()))+1
 			lineW = max(lineW, len('line '))
-			header = curses.newpad(1, csvW)
-			body   = curses.newpad(csvH, csvW)
-			status = curses.newwin(1, csvW, screenH-1,0)
+			header = curses.newpad(1,    max(csvW,screenW))
+			body   = curses.newpad(csvH, max(csvW,screenW))
+			status = curses.newwin(1,    max(csvW,screenW), screenH-1,0)
 			lines  = curses.newpad(csvH, lineW)
 					
 			hattrs = curses.A_STANDOUT
@@ -178,6 +179,7 @@ def main(screen):
 				addstr(lines, i, 0, '{{:<{}d}}'.format(lineW).format(i), lattrs)	
 			
 			csv_header = csv.get_header()
+			addstr(header,0,0, ''.join([' ']*screenW), hattrs)
 			addstr(header,0,0, csv_header, hattrs)
 			csv.mark_dirty()
 			screen.refresh()
