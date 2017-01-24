@@ -111,7 +111,7 @@ class CSVFormatter(object):
 	def get_element_str(self, row, col):
 		return self._rowcol_tmpl[col].format(self.get_element(row, col))
 		
-	def build_view(self, pad, rgx, mode, row_start=None, row_end=None):
+	def build_view(self, pad, rgx, mode, row_start=None, row_end=None, cmap=cmap4):
 		self.make_ready() 
 		if not row_start: row_start = 0
 		if not row_end:   row_end   = self.nrows()
@@ -132,7 +132,7 @@ class CSVFormatter(object):
 				elif mode==M_COLOUR_SCL and self.isnum[c]:
 					f = float(self.get_element(r,c))
 					f = float(f - self.cmins[c]) / float(self.cmaxs[c]-self.cmins[c])
-					attrs = attrs | curses.color_pair(tcol(*cmap4(f)))
+					attrs = attrs | curses.color_pair(tcol(*cmap(f)))
 				
 				el = self.get_element_str(r,c)
 				addstr(pad, x, y, el, attrs )

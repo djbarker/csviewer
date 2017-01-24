@@ -12,6 +12,11 @@ def is_num(x):
     return True
 	
 def charcmp(c1,c2):
+	if type(c2) in [list, tuple]:
+		for c in c2:
+			if charcmp(c1,c):
+				return True
+		return False
 	if type(c2)==int:
 		return c1==c2
 	else:

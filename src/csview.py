@@ -50,8 +50,11 @@ help_str = """
 
    h - Toggle this help message.
    c - Toggle colour mode.
+   m - Next colour map (enter to finish).
    f - Go to end of file.
    g - Go to beginning of file.
+   v - Go to first column.
+   b - Go to last column.
    / - Search for regex.
    n - Next search result (if any).
    q - Quit.
@@ -102,6 +105,7 @@ def main(screen):
 	
 	last_c = ''
 	hmode  = False
+	mmode  = False
 	smode  = S_NORMAL
 	cmode  = next(cmodes)
 	lineno = False
@@ -110,11 +114,29 @@ def main(screen):
 	# help window
 	help_str = help_str.split('\n')
 	helpH = len(help_str)
-	helpW = max([len(l) for l in help_str])
+	helpW = max([len(l)+2 for l in help_str])
 	help = curses.newpad(helpH,helpW)
 	for i,l in enumerate(help_str):
 		help.addstr(i,0,l)
 	help.border()
+	
+	# color window
+	cmapI = 0
+	cmaps = [ cmap4, cmap1, cmap3, cmap2 ]
+	cmapW = 56
+	cmapH = len(cmaps) + 2
+	cmap = curses.newpad(cmapH,cmapW)
+	def build_cmap_win():
+		for i in range(len(cmaps)):
+			k = i + 1
+			c1 = '<' if i==cmapI else ' '
+			c2 = '>' if i==cmapI else ' '
+			cmap.addstr(k, 1,       c1)
+			cmap.addstr(k, cmapW-2, c2)
+			for j in range(2, cmapW-2):
+				f = (j-2.)/(cmapW-4.)
+				cmap.addstr(k,j,'=',curses.color_pair(tcol(*cmaps[i](f))))
+		cmap.border()
 	
 	while True:
 
@@ -146,7 +168,6 @@ def main(screen):
 			status = curses.newwin(1, csvW, screenH-1,0)
 			lines  = curses.newpad(csvH, lineW)
 					
-			
 			hattrs = curses.A_STANDOUT
 			lattrs = curses.A_STANDOUT
 			#if cmode != M_NORMAL:
@@ -163,7 +184,7 @@ def main(screen):
 			
 		brow_start = max(0,           prow - 2*screenH)
 		brow_end   = min(csv.nrows(), prow + 2*screenH)
-		csv.build_view(body, rgx, cmode, brow_start, brow_end)
+		csv.build_view(body, rgx, cmode, brow_start, brow_end, cmaps[cmapI])
 
 		# display display
 		if lineno:
@@ -188,12 +209,19 @@ def main(screen):
 		status.refresh()
 		smode = S_NORMAL
 
+		# display colourmap chooser
+		if mmode:
+			build_cmap_win()
+			cmap.refresh(0,0
+				,screenH//2-cmapH//2,screenW//2-cmapW//2
+				,screenH//2+cmapH//2,screenW//2+cmapW//2 )
+		
 		# display help
 		if hmode:
 			help.refresh(0,0
 				,screenH//2-helpH//2,screenW//2-helpW//2
-				,screenH//2+helpH//2,screenW//2+helpW//2 )
-			
+				,screenH//2+helpH//2,screenW//2+helpW//2 )		
+		
 		# input
 		prow_end = max(csvH - screenH + 2,0)
 		pcol_end = max(csvW - screenW + loffset, 0)
@@ -202,6 +230,15 @@ def main(screen):
 			break
 		elif charcmp(c, 'h'):
 			hmode = not hmode
+		elif charcmp(c, 'm') and cmode==M_COLOUR_SCL:
+			if mmode:
+				cmapI = (cmapI+1) % len(cmaps)
+				csv.mark_dirty()
+			else:
+				mmode = True
+		elif charcmp(c, ['\n','\r',curses.KEY_ENTER]):
+			if mmode:
+				mmode = False
 		elif charcmp(c, curses.KEY_LEFT):
 			pcol   = max(pcol-col_shift, 0)
 		elif charcmp(c, curses.KEY_RIGHT):
@@ -218,6 +255,10 @@ def main(screen):
 			prow = prow_end
 		elif charcmp(c, 'g'):
 			prow = 0
+		elif charcmp(c, 'v'):
+			pcol = 0
+		elif charcmp(c, 'b'):
+			pcol = pcol_end
 		elif charcmp(c, 'l'):
 			lineno = not lineno
 			loffset = lineW if lineno else 0
@@ -246,10 +287,10 @@ def main(screen):
 			csv.mark_dirty()
 			cmode = next(cmodes)
 			smode = S_QUERY
+			mmode = False
 			status_str = 'Colour mode: {}'.format({
 				M_NORMAL: 'Off', M_COLOUR_PN: 'PlusMinus', M_COLOUR_SCL: 'Scale'
 				}[cmode])
- 
  
 		prow_end = max(csvH - screenH + 2,0)
 		pcol_end = max(csvW - screenW + loffset, 0)
