@@ -1,4 +1,5 @@
 
+import math
 import curses
 from curses.textpad import Textbox, rectangle
 
@@ -49,6 +50,7 @@ def bump(x,x01,x11,x12,x02):
 
 def cmap1(frac):
 	"r->b->g"
+	if math.isnan(frac): return (-1,-1,-1)
 	r = clamp(2*(0.5-frac), 0, 1)
 	g = clamp(2*(frac-0.5), 0, 1)
 	b = clamp(1-(3*(frac-0.5))**2, 0, 1)
@@ -56,6 +58,7 @@ def cmap1(frac):
 
 def cmap2(frac):
 	"r->y->g"
+	if math.isnan(frac): return (-1,-1,-1)
 	r = clamp(5*(0.75-frac), 0, 1)
 	g = clamp(5*(frac-0.25), 0, 1)
 	b = 0
@@ -63,6 +66,7 @@ def cmap2(frac):
 
 def cmap3(frac):
 	"r->w->g"
+	if math.isnan(frac): return (-1,-1,-1)
 	r = clamp(5*(0.75-frac), 0, 1)
 	g = clamp(5*(frac-0.25), 0, 1)
 	b = bump(frac, 0.25, 0.4, 0.6, 0.75)
@@ -72,13 +76,17 @@ def cmap3(frac):
 
 def cmap4(frac):
 	"jet"
+	if math.isnan(frac): return (-1,-1,-1)
 	b = bump(frac, -0.1,  0.1,  0.4, 0.6)
 	g = bump(frac,  0.1,  0.4,  0.6, 0.9)
 	r = bump(frac,  0.4,  0.6,  0.9, 1.1)
 	return tuple([int(5*x) for x in (r,g,b)])
 		
 def tcol(r,g,b):
-	return 17+int( b + 6*(g + 6*r) )
+	if (0>r) or (0>g) or (0>b):
+		return curses.color_pair(8)
+	else:
+		return 17+int( b + 6*(g + 6*r) )
 		
 #### NCURSES UTILS
 		

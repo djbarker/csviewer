@@ -1,5 +1,6 @@
 from utils import *
 import curses
+import math
 import sys
 import re
 
@@ -77,8 +78,9 @@ class CSVFormatter(object):
 			self.isnum[i]  = self.isnum[i] and is_num(data[i])
 			if self.isnum[i]:
 				f = float(data[i])
-				self.cmins[i] = min(self.cmins[i],f)
-				self.cmaxs[i] = max(self.cmaxs[i],f) 
+				if not math.isnan(f):
+					self.cmins[i] = min(self.cmins[i],f)
+					self.cmaxs[i] = max(self.cmaxs[i],f) 
 
 		self.dirty.append(True)
 		self.lines.append(data)
@@ -130,8 +132,11 @@ class CSVFormatter(object):
 					else:
 						attrs = attrs | curses.color_pair(13)
 				elif mode==M_COLOUR_SCL and self.isnum[c]:
-					f = float(self.get_element(r,c))
-					f = float(f - self.cmins[c]) / float(self.cmaxs[c]-self.cmins[c])
+					try:
+						f = float(self.get_element(r,c))
+						f = float(f - self.cmins[c]) / float(self.cmaxs[c]-self.cmins[c])
+					except ZeroDivisionError:
+						f = 0.5
 					attrs = attrs | curses.color_pair(tcol(*cmap(f)))
 				
 				el = self.get_element_str(r,c)
