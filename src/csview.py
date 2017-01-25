@@ -164,10 +164,10 @@ def main(screen):
 		if changed:
 			lineW = len(str(csv.nrows()))+1
 			lineW = max(lineW, len('line '))
-			header = curses.newpad(1,    max(csvW,screenW))
-			body   = curses.newpad(csvH, max(csvW,screenW))
-			status = curses.newwin(1,    max(csvW,screenW), screenH-1,0)
-			lines  = curses.newpad(csvH, lineW)
+			lines  = curses.newpad(screenH, lineW)
+			body   = curses.newpad(screenH, max(csvW,screenW))
+			header = curses.newpad(1,       max(csvW,screenW))
+			status = curses.newwin(1,       max(csvW,screenW), screenH-1,0)
 					
 			hattrs = curses.A_STANDOUT
 			lattrs = curses.A_STANDOUT
@@ -184,8 +184,8 @@ def main(screen):
 			csv.mark_dirty()
 			screen.refresh()
 			
-		brow_start = max(0,           prow - 2*screenH)
-		brow_end   = min(csv.nrows(), prow + 2*screenH)
+		brow_start = prow
+		brow_end   = min(prow + screenH, csvH)
 		csv.build_view(body, rgx, cmode, brow_start, brow_end, cmaps[cmapI])
 
 		# display display
@@ -197,7 +197,7 @@ def main(screen):
 		else:
 			loffset = 0
 		header.refresh(0,pcol,0,loffset,0,screenW-1)
-		body.refresh(prow,pcol,1,loffset,screenH-2,screenW-1)
+		body.refresh(0,pcol,1,loffset,screenH-2,screenW-1)
 
 		if smode == S_NORMAL:
 			status_pad = ''.join([' ']*screenW)
@@ -247,12 +247,16 @@ def main(screen):
 			pcol   = min(pcol+col_shift, pcol_end )
 		elif charcmp(c, curses.KEY_DOWN):
 			prow = min(prow+1, prow_end)
+			csv.mark_dirty()
 		elif charcmp(c, curses.KEY_UP):
 			prow = max(prow-1, 0)
+			csv.mark_dirty()
 		elif charcmp(c, curses.KEY_PPAGE):
 			prow = max(prow-row_shift, 0)
+			csv.mark_dirty()
 		elif charcmp(c, curses.KEY_NPAGE):
 			prow = min(prow+row_shift, prow_end)
+			csv.mark_dirty()
 		elif charcmp(c, 'f'):
 			prow = prow_end
 		elif charcmp(c, 'g'):

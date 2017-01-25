@@ -135,7 +135,7 @@ class CSVFormatter(object):
 					attrs = attrs | curses.color_pair(tcol(*cmap(f)))
 				
 				el = self.get_element_str(r,c)
-				addstr(pad, x, y, el, attrs )
+				addstr(pad, r-row_start, y, el, attrs )
 			
 				if rgx is not None:
 					attrs = attrs | curses.A_STANDOUT
