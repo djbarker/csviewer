@@ -146,7 +146,7 @@ def main(screen):
 		changed = (screenH != screenH_old) or (screenW != screenW_old)
 		screenH_old = screenH
 		screenW_old = screenW
-		col_shift = 5
+		col_shift = 6
 		row_shift = screenH - 2
 
 		# load data
@@ -184,9 +184,12 @@ def main(screen):
 			csv.mark_dirty()
 			screen.refresh()
 			
-		brow_start = prow
-		brow_end   = min(prow + screenH, csvH)
-		csv.build_view(body, rgx, cmode, brow_start, brow_end, cmaps[cmapI])
+		if csv.nrows() > 0:
+			brow_start = prow
+			brow_end   = min(prow + screenH, csvH)
+			csv.build_view(body, rgx, cmode, brow_start, brow_end, cmaps[cmapI])
+		else:
+			addstr(body, (screenH//2)-1, screenW//2-5, '... EMPTY ...')
 
 		# display display
 		if lineno:
@@ -269,8 +272,12 @@ def main(screen):
 			lineno = not lineno
 			loffset = lineW if lineno else 0
 		elif charcmp(c, 'n') and rgx:
-			(lrow,lcol) = csv.find_next(rgx, lrow, lcol)
-			(prow,pcol) = csv.log2phys(lrow, lcol)
+			try:
+				(lrow,lcol) = csv.find_next(rgx, lrow, lcol)
+				(prow,pcol) = csv.log2phys(lrow, lcol)
+			except ValueError:
+				status_str = 'End of matches'
+				smode = S_QUERY
 		elif charcmp(c, '/'):
 			# search
 			rgx = get_user_input(status, "Query: ")
